@@ -54,7 +54,7 @@ def open_file(file):
 
 # process a downloaded zip file
 def process_file(file):
-    filetypes = [".html", ".txt", ".blend"]
+    filetypes = [".html", ".txt", ".blend", ".rtf", ".pdf", ".docx", ".doc", ".odt"]
     try:
         if file.endswith(".zip"):
             print("Removing old unzipped files...")
