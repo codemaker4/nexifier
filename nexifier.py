@@ -27,8 +27,9 @@ def wait_for_new_file():
         diff = new_files - current_files
         if diff:
             new_file = diff.pop()
-            # Check if the new file has a .part extension
-            if new_file.endswith('.part') or new_file.endswith('.crdownload'):
+            # Check if the new file has a temporary extension
+            temp_extensions = ['.part', '.crdownload', '.tmp']
+            if any(new_file.endswith(ext) for ext in temp_extensions):
                 print(f"Waiting for {new_file} to finish downloading...")
                 continue  # Continue waiting if the file is still downloading
             else:
