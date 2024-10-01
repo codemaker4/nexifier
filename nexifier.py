@@ -54,8 +54,11 @@ def open_file(file):
 
 # process a downloaded zip file
 def process_file(file):
-    filetypes = [".html", ".txt", ".blend", ".rtf", ".pdf", ".docx", ".doc", ".odt", ".png",
-                 ".jpg", ".jpeg"]
+    # List of known filetypes to look for, in order of preference.
+    filetypes = ["index.html", ".html",
+                 ".blend",
+                 ".txt", ".rtf", ".pdf", ".docx", ".doc", ".odt",
+                 ".png", ".jpg", ".jpeg"]
     try:
         if file.endswith(".zip"):
             print("Removing old unzipped files...")
@@ -63,12 +66,17 @@ def process_file(file):
             print("Unzipping...")
             shutil.unpack_archive(os.path.join(downloads, file), unzipped)
             print("Looking for known filetypes...")
+            best_file = None
+            file_niceness = 1e9  # Lower is better
             for root, dirs, files in os.walk(unzipped):
                 for file in files:
-                    for filetype in filetypes:
-                        if file.endswith(filetype):
-                            open_file(os.path.join(root, file))
-                            return
+                    for niceness, filetype in enumerate(filetypes):
+                        if file.endswith(filetype) and niceness < file_niceness:
+                            best_file = os.path.join(root, file)
+                            file_niceness = niceness
+            if best_file:
+                open_file(os.path.join(root, best_file))
+                return
             print("No known filetypes found, opening folder...")
             # open the folder
             open_file(unzipped)
