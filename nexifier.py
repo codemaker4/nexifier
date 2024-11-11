@@ -86,7 +86,11 @@ def process_file(file):
                 if file.endswith(filetype):
                     open_file(os.path.join(downloads, file))
                     return
-            print("The file is not a zip file or a known filetype. It won't be opened.")
+            print("Putting file in an emptied unzipped folder...")
+            shutil.rmtree(unzipped, ignore_errors=True)
+            os.makedirs(unzipped, exist_ok=True)
+            shutil.move(os.path.join(downloads, file), os.path.join(unzipped, file))
+            open_file(unzipped)
     except Exception as e:
         print("Error in processing file:", e)
 
