@@ -19,9 +19,10 @@ else:
 
 
 # wait for a new file to appear in the downloads folder
-def wait_for_new_file():
+def wait_for_new_file(max_seconds=60*10):
     current_files = set(os.listdir(downloads))
-    while True:
+    start_time = time.time()
+    while time.time() - start_time < max_seconds:
         time.sleep(0.1)
         new_files = set(os.listdir(downloads))
         diff = new_files - current_files
@@ -36,6 +37,8 @@ def wait_for_new_file():
                 # Wait for the file to be completely written to disk
                 time.sleep(0.1)
                 return new_file
+    print("No new files found after waiting for", max_seconds, "seconds")
+    return None
 
 
 # cross platform general file opener
@@ -101,5 +104,9 @@ def process_file(file):
 while True:
     print("Waiting for a new file...")
     new_file = wait_for_new_file()
+    if not new_file:
+        break
     print("New file:", new_file)
     process_file(new_file)
+
+print("stopping...")
