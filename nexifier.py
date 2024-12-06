@@ -65,6 +65,7 @@ def process_file(file):
             shutil.rmtree(unzipped, ignore_errors=True)
             print("Unzipping...")
             shutil.unpack_archive(os.path.join(downloads, file), unzipped)
+            os.remove(os.path.join(downloads, file))
             print("Looking for known filetypes...")
             best_file = None
             file_niceness = 1e9  # Lower is better
@@ -84,13 +85,15 @@ def process_file(file):
             print("Looking for known filetypes...")
             for filetype in filetypes:
                 if file.endswith(filetype):
-                    open_file(os.path.join(downloads, file))
-                    return
+                    break
+            else:
+                print("No known filetypes found")
+                return
             print("Putting file in an emptied unzipped folder...")
             shutil.rmtree(unzipped, ignore_errors=True)
             os.makedirs(unzipped, exist_ok=True)
             shutil.move(os.path.join(downloads, file), os.path.join(unzipped, file))
-            open_file(unzipped)
+            open_file(os.path.join(unzipped, file))
     except Exception as e:
         print("Error in processing file:", e)
 
