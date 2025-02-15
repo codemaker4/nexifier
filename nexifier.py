@@ -29,7 +29,7 @@ def wait_for_new_file(max_seconds=60*10):
         if diff:
             new_file = diff.pop()
             # Check if the new file has a temporary extension
-            temp_extensions = ['.part', '.crdownload', '.tmp']
+            temp_extensions = ['.part', '.crdownload', '.tmp', '.download']
             if any(new_file.endswith(ext) for ext in temp_extensions):
                 print(f"Waiting for {new_file} to finish downloading...")
                 continue  # Continue waiting if the file is still downloading
@@ -61,7 +61,7 @@ def process_file(file):
     filetypes = ["index.html", ".html",
                  ".blend",
                  ".txt", ".rtf", ".pdf", ".docx", ".doc", ".odt",
-                 ".png", ".jpg", ".jpeg"]
+                 ".png", ".jpg", ".jpeg", ".mp4", ".mkv"]
     try:
         if file.endswith(".zip"):
             print("Removing old unzipped files...")
@@ -107,6 +107,8 @@ while True:
     if not new_file:
         break
     print("New file:", new_file)
+    if os.name == "nt": # idk why, but on Windows I have to wait a little extra.
+        time.sleep(0.5) # otherwise it throws "not a zip file" errors.
     process_file(new_file)
 
 print("stopping...")
