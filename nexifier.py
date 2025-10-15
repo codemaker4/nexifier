@@ -61,7 +61,8 @@ def process_file(file):
     filetypes = ["index.html", ".html",
                  ".blend",
                  ".txt", ".rtf", ".pdf", ".docx", ".doc", ".odt",
-                 ".png", ".jpg", ".jpeg", ".mp4", ".mkv", ".llsp3"]
+                 ".png", ".jpg", ".jpeg", ".mp4", ".mkv", ".webm",
+                 ".llsp3", "ipynb"]
     try:
         if file.endswith(".zip"):
             print("Removing old unzipped files...")
