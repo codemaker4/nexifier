@@ -44,6 +44,30 @@ def wait_for_new_file(max_seconds=60*10):
 # cross platform general file opener
 def open_file(file):
     print("Opening file:", file)
+
+    if file.endswith(".py"):
+        with open(file, "r") as f:
+            file_text = f.read()
+        imports = []
+        for line in file_text.splitlines():
+            line = line.strip()
+            if line.startswith("import ") or line.startswith("from "):
+                imports.append(line)
+        print(file_text)
+        print("Found imports:", imports)
+        yn = input("Do you want to run this file? (y/N)")
+        if yn.lower() != "y":
+            print("Not running the file.")
+            return
+        while True:
+            print("\n----- start of python output -----\n")
+            subprocess.run([sys.executable, file])
+            print("\n-----  end of python output  -----\n")
+            yn = input("Do you want to run the file again? (Y/n)")
+            if yn.lower() == "n":
+                break
+        return
+
     if os.name == "posix":
         if sys.platform == "darwin":
             subprocess.run(["open", file])
@@ -62,7 +86,8 @@ def process_file(file):
                  ".blend",
                  ".txt", ".rtf", ".pdf", ".docx", ".doc", ".odt",
                  ".png", ".jpg", ".jpeg", ".mp4", ".mkv", ".webm",
-                 ".llsp3", "ipynb"]
+                 ".llsp3", "ipynb",
+                 ".py"]
     try:
         if file.endswith(".zip"):
             print("Removing old unzipped files...")
