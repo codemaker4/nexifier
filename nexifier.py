@@ -1,11 +1,9 @@
-# Look at the downloads folder, and wait for a new file to appear.
-# When it does, unzip it in place and look for a .htlm file.
-
+#!/usr/bin/env python3
 import os
-import time
 import shutil
 import subprocess
 import sys
+import time
 
 # Path to the downloads folder and a temporary folder to unzip the files
 if os.name == "nt":
@@ -19,7 +17,7 @@ else:
 
 
 # wait for a new file to appear in the downloads folder
-def wait_for_new_file(max_seconds=60*10):
+def wait_for_new_file(max_seconds=60 * 10):
     current_files = set(os.listdir(downloads))
     start_time = time.time()
     while time.time() - start_time < max_seconds:
@@ -29,7 +27,7 @@ def wait_for_new_file(max_seconds=60*10):
         if diff:
             new_file = diff.pop()
             # Check if the new file has a temporary extension
-            temp_extensions = ['.part', '.crdownload', '.tmp', '.download']
+            temp_extensions = [".part", ".crdownload", ".tmp", ".download"]
             if any(new_file.endswith(ext) for ext in temp_extensions):
                 print(f"Waiting for {new_file} to finish downloading...")
                 continue  # Continue waiting if the file is still downloading
@@ -51,17 +49,17 @@ def open_file(file):
         imports = []
         for line in file_text.splitlines():
             line = line.strip()
-            if line.startswith("import ") or line.startswith("from "):
+            if line.startswith(("import ", "from ")):
                 imports.append(line)
-        print(file_text)
+        print("##### Python file:\n\n" + file_text + "\n##### End of file\n")
         print("Found imports:", imports)
-        yn = input("Do you want to run this file? (y/N)")
+        yn = input("\nDo you want to run this file? (y/N)")
         if yn.lower() != "y":
             print("Not running the file.")
             return
         while True:
             print("\n----- start of python output -----\n")
-            subprocess.run([sys.executable, file])
+            subprocess.run([sys.executable, file], check=False)
             print("\n-----  end of python output  -----\n")
             yn = input("Do you want to run the file again? (Y/n)")
             if yn.lower() == "n":
@@ -70,9 +68,9 @@ def open_file(file):
 
     if os.name == "posix":
         if sys.platform == "darwin":
-            subprocess.run(["open", file])
+            subprocess.run(["open", file], check=False)
         else:
-            subprocess.run(["xdg-open", file])
+            subprocess.run(["xdg-open", file], check=False)
     elif os.name == "nt":
         os.startfile(file)
     else:
@@ -82,49 +80,60 @@ def open_file(file):
 # process a downloaded zip file
 def process_file(file):
     # List of known filetypes to look for, in order of preference.
-    filetypes = ["index.html", ".html",
-                 ".blend",
-                 ".txt", ".rtf", ".pdf", ".docx", ".doc", ".odt",
-                 ".png", ".jpg", ".jpeg", ".mp4", ".mkv", ".webm",
-                 ".llsp3", "ipynb",
-                 ".py"]
-    try:
-        if file.endswith(".zip"):
-            print("Removing old unzipped files...")
-            shutil.rmtree(unzipped, ignore_errors=True)
-            print("Unzipping...")
-            shutil.unpack_archive(os.path.join(downloads, file), unzipped)
-            os.remove(os.path.join(downloads, file))
-            print("Looking for known filetypes...")
-            best_file = None
-            file_niceness = 1e9  # Lower is better
-            for root, dirs, files in os.walk(unzipped):
-                for file in files:
-                    for niceness, filetype in enumerate(filetypes):
-                        if file.endswith(filetype) and niceness < file_niceness:
-                            best_file = os.path.join(root, file)
-                            file_niceness = niceness
-            if best_file:
-                open_file(os.path.join(root, best_file))
-                return
-            print("No known filetypes found, opening folder...")
-            # open the folder
-            open_file(unzipped)
+    filetypes = [
+        "index.html",
+        ".html",
+        ".blend",
+        ".txt",
+        ".rtf",
+        ".pdf",
+        ".docx",
+        ".doc",
+        ".odt",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".mp4",
+        ".mkv",
+        ".webm",
+        ".llsp3",
+        ".ipynb",
+        ".py",
+    ]
+    if file.endswith(".zip"):
+        print("Removing old unzipped files...")
+        shutil.rmtree(unzipped, ignore_errors=True)
+        print("Unzipping...")
+        shutil.unpack_archive(os.path.join(downloads, file), unzipped)
+        os.remove(os.path.join(downloads, file))
+        print("Looking for known filetypes...")
+        best_file = None
+        file_niceness = 1e9  # Lower is better
+        for root, _, files in os.walk(unzipped):
+            for filename in files:
+                for niceness, filetype in enumerate(filetypes):
+                    if filename.endswith(filetype) and niceness < file_niceness:
+                        best_file = os.path.join(root, filename)
+                        file_niceness = niceness
+        if best_file:
+            open_file(os.path.join(unzipped, best_file))
+            return
+        print("No known filetypes found, opening folder...")
+        # open the folder
+        open_file(unzipped)
+    else:
+        print("Looking for known filetypes...")
+        for filetype in filetypes:
+            if file.endswith(filetype):
+                break
         else:
-            print("Looking for known filetypes...")
-            for filetype in filetypes:
-                if file.endswith(filetype):
-                    break
-            else:
-                print("No known filetypes found")
-                return
-            print("Putting file in an emptied unzipped folder...")
-            shutil.rmtree(unzipped, ignore_errors=True)
-            os.makedirs(unzipped, exist_ok=True)
-            shutil.move(os.path.join(downloads, file), os.path.join(unzipped, file))
-            open_file(os.path.join(unzipped, file))
-    except Exception as e:
-        print("Error in processing file:", e)
+            print("No known filetypes found")
+            return
+        print("Putting file in an emptied unzipped folder...")
+        shutil.rmtree(unzipped, ignore_errors=True)
+        os.makedirs(unzipped, exist_ok=True)
+        shutil.move(os.path.join(downloads, file), os.path.join(unzipped, file))
+        open_file(os.path.join(unzipped, file))
 
 
 while True:
@@ -133,8 +142,8 @@ while True:
     if not new_file:
         break
     print("New file:", new_file)
-    if os.name == "nt": # idk why, but on Windows I have to wait a little extra.
-        time.sleep(0.5) # otherwise it throws "not a zip file" errors.
+    if os.name == "nt":  # idk why, but on Windows I have to wait a little extra.
+        time.sleep(0.5)  # otherwise it throws "not a zip file" errors.
     process_file(new_file)
 
 print("stopping...")
